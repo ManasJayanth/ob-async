@@ -1,4 +1,4 @@
-;;; ob-async.el --- Asynchronous org-babel src block execution
+;;; ob-async.el --- Asynchronous org-babel src block execution  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2017 Andrew Stahlman
 
@@ -47,6 +47,13 @@ functionality may be implemented separately.")
   "Hook run in the async child process prior to executing a src
 block. You can use this hook to perform language-specific
 initialization which would normally execute in your init file.")
+
+(defvar org-babel-async-content)
+;; Declared special on purpose: `ob-async-org-babel-execute-src-block'
+;; let-binds it and relies on `async-inject-variables' (which matches
+;; it via `ob-async-inject-variables') to see that binding with
+;; `boundp'/`symbol-value' and copy it into the child Emacs.  Under
+;; lexical binding the let would otherwise be lexical and invisible.
 
 (defvar ob-async-inject-variables "\\borg-babel.+"
   "Regex of variables that should be injected into the async process.
@@ -146,8 +153,7 @@ block."
                            default-directory))
                      (cmd (intern (concat "org-babel-execute:" lang)))
                      (org-babel-async-content
-                      (buffer-substring-no-properties (point-min) (point-max)))
-                     result)
+                      (buffer-substring-no-properties (point-min) (point-max))))
                 (unless (fboundp cmd)
                   (error "No org-babel-execute function for %s!" lang))
                 (message "executing %s code block%s..."
